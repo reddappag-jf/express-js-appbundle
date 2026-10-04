@@ -5,12 +5,12 @@ on:
       rt_npm_remote_repo_id:
         required: true
         type: string
-        default: "yoitsmikeho-github-npm-remote"
+        default: "rg-gactions-npm"
         description: "Artifactory Repository Name"
       rt_docker_repo:
         required: true
         type: string
-        default: "mikeho-github-docker-local"
+        default: "rg-workflow-docker"
         description: "Artifactory Docker repository"
       docker_image_name:
         required: true
@@ -62,19 +62,18 @@ jobs:
           JF_URL: https://${{ vars.JF_URL }}/
           JF_PROJECT: ${{ vars.JF_PROJECT }}
         with:
-            oidc-provider-name: mikeho-github
-            oidc-audience: mikeho-audience
-            version: latest
+            oidc-provider-name: reddappag
+            oidc-audience: reddappag
 
       - name: Extract GitHub OIDC Token
         run: |
-          RAW_TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=mikeho-audience" | jq -r '.value')
+          RAW_TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=reddappag" | jq -r '.value')
           #RAW_TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq -r '.value')
           echo "=== COPY BASE64 STRING BELOW ==="
           echo "$RAW_TOKEN" | base64 -w 0
           echo -e "\n=============================="
           echo "=== JFrog Access Token ==="
-          ACCESS_TOKEN=$(jf exchange-oidc-token mikeho-github $RAW_TOKEN --project=${{ vars.JF_PROJECT }} | jq -r '.AccessToken')
+          ACCESS_TOKEN=$(jf exchange-oidc-token reddappag $RAW_TOKEN --project=${{ vars.JF_PROJECT }} | jq -r '.AccessToken')
           #ACCESS_TOKEN=$(jf exchange-oidc-token mikeho-github $RAW_TOKEN | jq -r '.AccessToken')
           echo "$ACCESS_TOKEN"
           echo -e "\n=============================="
@@ -86,13 +85,13 @@ jobs:
             
       - name: Curation Audit 
         run: |
-          jf npmc --repo-resolve ${{ github.event.inputs.rt_npm_remote_repo_id }} --repo-deploy mikeho-github-npm-local
+          jf npmc --repo-resolve ${{ github.event.inputs.rt_npm_remote_repo_id }} --repo-deploy rg-gactions-npm
           jf curation-audit
           
       - name: NPM Configuration and Build 
         run: |
           jf --version
-          #jf npmc --repo-resolve ${{ github.event.inputs.rt_npm_remote_repo_id }} --repo-deploy mikeho-github-npm-local
+          #jf npmc --repo-resolve ${{ github.event.inputs.rt_npm_remote_repo_id }} --repo-deploy rg-gactions-npm
           jf npm i --omit dev
           jf npm ci
           jf npm publish --project=${{ vars.JF_PROJECT }}
